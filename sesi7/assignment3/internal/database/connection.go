@@ -3,7 +3,7 @@ package database
 import (
 	"log"
 	"os"
-	"sesi6/internal/model"
+	"sesi7/internal/model"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -22,7 +22,8 @@ func Init() *gorm.DB {
 		panic("failed to connect database")
 	}
 
-	db.AutoMigrate(&model.User{})
+	db.AutoMigrate(&model.Wind{})
+	db.AutoMigrate(&model.Water{})
 
 	return db
 }

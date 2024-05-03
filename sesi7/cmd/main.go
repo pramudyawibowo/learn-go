@@ -1,24 +1,15 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
-	"sesi7/internal/controller"
-	"sesi7/internal/database"
-	"time"
+	controllers "sesi6/internal/controller"
+	"sesi6/internal/database"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
-
-type WaterWindData struct {
-	Water int `json:"water"`
-	Wind  int `json:"wind"`
-}
 
 func main() {
 	err := godotenv.Load()
@@ -40,8 +31,9 @@ func main() {
 
 	r.Use(gin.Recovery())
 
-	waterWindController := controller.NewWaterWindController(db)
-	r.POST("/waterwind", waterWindController.Create)
+	api := r.Group("/api/v1")
+
+	controllers.NewUserControllers(db).Routes(api)
 
 	r.Any("/", func(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -52,29 +44,5 @@ func main() {
 	})
 
 	port := ":" + os.Getenv("APP_PORT")
-	go func() {
-		for {
-			time.Sleep(3 * time.Second)
-
-			water := rand.Intn(100) + 1
-			wind := rand.Intn(100) + 1
-
-			data := WaterWindData{
-				Water: water,
-				Wind:  wind,
-			}
-			payload, err := json.Marshal(data)
-			if err != nil {
-				log.Println("Error marshalling JSON:", err)
-				continue
-			}
-
-			_, err = http.Post("http://localhost"+port+"/waterwind", "application/json", bytes.NewBuffer(payload))
-			if err != nil {
-				log.Println("Failed to hit /waterwind endpoint:", err)
-			}
-		}
-	}()
-
 	r.Run(port)
 }
