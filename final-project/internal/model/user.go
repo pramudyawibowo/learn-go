@@ -2,7 +2,6 @@ package model
 
 import (
 	"final-project/internal/helper"
-	"log"
 	"time"
 
 	"github.com/asaskevich/govalidator"
@@ -20,6 +19,9 @@ type User struct {
 	RefreshToken string    `json:"refresh_token"`
 	CreatedAt    time.Time `json:"createdAt" gorm:"autoCreateTime;not null"`
 	UpdatedAt    time.Time `json:"updatedAt" gorm:"autoUpdateTime;not null"`
+
+	Recipients []Recipient `json:"recipients" gorm:"foreignKey:UserID"`
+	Shipping   []Shipping  `json:"shipping" gorm:"foreignKey:UserID"`
 }
 
 func (User) TableName() string {
@@ -28,17 +30,13 @@ func (User) TableName() string {
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
 
-	// validate user
 	_, err := govalidator.ValidateStruct(u)
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
-	// hash password
 	hashedPassword, err := helper.HashPassword(u.Password)
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 

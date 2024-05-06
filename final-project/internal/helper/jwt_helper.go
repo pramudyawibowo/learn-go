@@ -2,23 +2,31 @@ package helper
 
 import (
 	"os"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 )
 
 var secret = os.Getenv("JWT_SECRET_KEY")
 
-func GenerateJWT(id uint, role string) (string, error) {
-	claims := jwt.MapClaims{
-		"id":   id,
-		"role": role,
-	}
+type JWTClaims struct {
+	ID   uint   `json:"id"`
+	Role string `json:"role"`
+}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+func GenerateJWT(id uint, role string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"iss": "issuer",
+		"exp": time.Now().Add(time.Hour).Unix(),
+		"data": JWTClaims{
+			ID:   id,
+			Role: role,
+		},
+	})
 	return token.SignedString([]byte(secret))
 }
 
-func VerifyJWT(tokenString string) (jwt.MapClaims, error) {
+func VerifyJWT(tokenString string) (*JWTClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv(secret)), nil
 	})
@@ -31,5 +39,10 @@ func VerifyJWT(tokenString string) (jwt.MapClaims, error) {
 		return nil, err
 	}
 
-	return claims, nil
+	data := claims["data"].(map[string]interface{})
+
+	return &JWTClaims{
+		ID:   uint(data["id"].(float64)),
+		Role: data["role"].(string),
+	}, nil
 }

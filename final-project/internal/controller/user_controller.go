@@ -15,7 +15,10 @@ func NewUserControllers(db *gorm.DB) *UserControllers {
 	return &UserControllers{db}
 }
 
-func (u *UserControllers) Routes(r *gin.RouterGroup) {
+func (u *UserControllers) Routes(r *gin.RouterGroup, middlewares ...gin.HandlerFunc) {
+
+	r.Use(middlewares...)
+
 	r.GET("/users", u.GetAllUser)
 	r.GET("/users/:id", u.GetUserByID)
 	r.POST("/users", u.Create)
